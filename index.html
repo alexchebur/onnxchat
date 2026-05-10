@@ -249,11 +249,14 @@
             genStatus.textContent = '';
 
             try {
+                // Главное исправление: subfolder: 'onnx'
                 generator = await pipeline(
                     'text-generation',
                     'onnx-community/rugpt3small_based_on_gpt2-ONNX',
                     {
                         model_file_name: modelFileName,
+                        subfolder: 'onnx',              // модель лежит в папке onnx/
+                        // токенизатор и config автоматически подтянутся из корня репозитория
                         progress_callback: (progress) => {
                             if (progress.status === 'progress') {
                                 const percent = (progress.loaded / progress.total) * 100;
@@ -310,7 +313,6 @@
                     do_sample: true,
                     callback_function: (beams) => {
                         const tokenIds = beams[0].output_token_ids;
-                        // Декодируем всю последовательность (вход + сгенерированное)
                         const decoded = generator.tokenizer.decode(tokenIds, {
                             skip_special_tokens: true
                         });
@@ -323,7 +325,6 @@
                     }
                 });
 
-                // Финальная запись (на случай, если callback не сработал)
                 outputText.value = result[0].generated_text;
                 genProgress.value = 100;
                 genStatus.textContent = '✅ Готово';
@@ -335,7 +336,7 @@
             }
         });
 
-        // Дополнительно: разрешаем отправку по Ctrl+Enter
+        // Отправка по Ctrl+Enter
         inputText.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
