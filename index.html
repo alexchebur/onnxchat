@@ -5,175 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ruGPT-3 Small ONNX – Чат (Transformers.js)</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: #1e1e2f;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
+            background: #1e1e2f; color: #e0e0e0;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 20px;
         }
-
         .container {
-            width: 100%;
-            max-width: 800px;
-            background: #2a2a3c;
-            border-radius: 16px;
-            padding: 30px 25px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            width: 100%; max-width: 800px;
+            background: #2a2a3c; border-radius: 16px;
+            padding: 30px 25px; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
         }
-
-        h1 {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #ffb86c;
-        }
-
-        .model-loader {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-
-        label {
-            font-weight: 600;
-            color: #c0c0d0;
-        }
-
+        h1 { font-size: 1.8rem; margin-bottom: 20px; text-align: center; color: #ffb86c; }
+        .model-loader { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center; }
+        label { font-weight: 600; color: #c0c0d0; }
         select, button {
-            padding: 10px 16px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: #1e1e2f;
-            color: #e0e0e0;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: background 0.2s, border-color 0.2s;
+            padding: 10px 16px; border-radius: 8px; border: 1px solid #444;
+            background: #1e1e2f; color: #e0e0e0; font-size: 0.95rem;
+            cursor: pointer; transition: background 0.2s, border-color 0.2s;
         }
+        select { max-width: 220px; }
+        button { background: #4a4a7a; border-color: #5a5a8a; font-weight: 600; }
+        button:hover:not(:disabled) { background: #5a5a9a; border-color: #7a7aca; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        select {
-            max-width: 220px;
-        }
+        .progress-container, .gen-progress-container { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        progress { flex: 1; height: 14px; border-radius: 10px; overflow: hidden; }
+        progress::-webkit-progress-bar { background-color: #3a3a4a; border-radius: 10px; }
+        progress::-webkit-progress-value { background: linear-gradient(90deg, #ffb86c, #ff79c6); border-radius: 10px; }
+        progress::-moz-progress-bar { background: linear-gradient(90deg, #ffb86c, #ff79c6); border-radius: 10px; }
+        .status-text { font-size: 0.9rem; color: #b0b0c0; min-width: 120px; }
 
-        button {
-            background: #4a4a7a;
-            border-color: #5a5a8a;
-            font-weight: 600;
-        }
-
-        button:hover:not(:disabled) {
-            background: #5a5a9a;
-            border-color: #7a7aca;
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .progress-container, .gen-progress-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        progress {
-            flex: 1;
-            height: 14px;
-            border-radius: 10px;
-            overflow: hidden;
-            appearance: none;
-            -webkit-appearance: none;
-        }
-
-        progress::-webkit-progress-bar {
-            background-color: #3a3a4a;
-            border-radius: 10px;
-        }
-
-        progress::-webkit-progress-value {
-            background: linear-gradient(90deg, #ffb86c, #ff79c6);
-            border-radius: 10px;
-        }
-
-        progress::-moz-progress-bar {
-            background: linear-gradient(90deg, #ffb86c, #ff79c6);
-            border-radius: 10px;
-        }
-
-        .status-text {
-            font-size: 0.9rem;
-            color: #b0b0c0;
-            min-width: 120px;
-        }
-
-        .chat {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
+        .chat { display: flex; flex-direction: column; gap: 15px; }
         textarea {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: 1px solid #444;
-            background: #1e1e2f;
-            color: #f0f0f0;
-            font-size: 1rem;
-            resize: vertical;
-            font-family: inherit;
-            transition: border-color 0.2s;
+            width: 100%; padding: 14px; border-radius: 12px;
+            border: 1px solid #444; background: #1e1e2f;
+            color: #f0f0f0; font-size: 1rem; resize: vertical;
+            font-family: inherit; transition: border-color 0.2s;
         }
-
-        textarea:focus {
-            outline: none;
-            border-color: #ffb86c;
-        }
-
-        #input-text {
-            min-height: 80px;
-        }
-
-        #output-text {
-            min-height: 160px;
-            background: #232336;
-            cursor: default;
-        }
-
-        .btn-send {
-            align-self: flex-start;
-            padding: 12px 28px;
-            font-size: 1rem;
-        }
-
-        .info-note {
-            font-size: 0.8rem;
-            color: #9090a0;
-            margin-top: 15px;
-            text-align: center;
-        }
+        textarea:focus { outline: none; border-color: #ffb86c; }
+        #input-text { min-height: 80px; }
+        #output-text { min-height: 160px; background: #232336; cursor: default; }
+        .btn-send { align-self: flex-start; padding: 12px 28px; font-size: 1rem; }
+        .info-note { font-size: 0.8rem; color: #9090a0; margin-top: 15px; text-align: center; }
 
         @media (max-width: 500px) {
-            .model-loader {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            select {
-                max-width: 100%;
-            }
+            .model-loader { flex-direction: column; align-items: stretch; }
+            select { max-width: 100%; }
         }
     </style>
 </head>
@@ -220,7 +99,7 @@
     <script type="module">
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
 
-        // DOM-элементы
+        // ---------- DOM элементы ----------
         const loadBtn = document.getElementById('load-btn');
         const modelSelect = document.getElementById('model-select');
         const loadProgress = document.getElementById('load-progress');
@@ -234,7 +113,7 @@
         let generator = null;
         let isLoading = false;
 
-        // Загрузка модели
+        // ---------- Загрузка модели ----------
         loadBtn.addEventListener('click', async () => {
             if (isLoading) return;
 
@@ -249,15 +128,20 @@
             genStatus.textContent = '';
 
             try {
-                // Главное исправление: subfolder: 'onnx'
+                // ВАЖНО: явно разделяем источники:
+                // - config и tokenizer берём из КОРНЯ репозитория
+                // - модель (onnx) берём из подпапки onnx/
                 generator = await pipeline(
                     'text-generation',
-                    'onnx-community/rugpt3small_based_on_gpt2-ONNX',
+                    'onnx-community/rugpt3small_based_on_gpt2-ONNX', // базовый путь
                     {
                         model_file_name: modelFileName,
-                        subfolder: 'onnx',              // модель лежит в папке onnx/
-                        // токенизатор и config автоматически подтянутся из корня репозитория
+                        subfolder: 'onnx',                // только для файла модели
+                        // Конфигурацию и токенизатор ищем в корне (без subfolder)
+                        config: 'onnx-community/rugpt3small_based_on_gpt2-ONNX',
+                        tokenizer: 'onnx-community/rugpt3small_based_on_gpt2-ONNX',
                         progress_callback: (progress) => {
+                            console.log('Progress:', progress); // для отладки
                             if (progress.status === 'progress') {
                                 const percent = (progress.loaded / progress.total) * 100;
                                 loadProgress.value = percent;
@@ -268,7 +152,7 @@
                                 loadStatus.textContent = 'Файлы получены, инициализация...';
                             } else if (progress.status === 'ready') {
                                 loadProgress.value = 100;
-                                loadStatus.textContent = 'Модель готова к работе';
+                                loadStatus.textContent = 'Модель готова';
                             }
                         }
                     }
@@ -276,7 +160,7 @@
                 loadStatus.textContent = '✅ Модель загружена и готова';
                 sendBtn.disabled = false;
             } catch (error) {
-                console.error('Ошибка загрузки модели:', error);
+                console.error('Ошибка загрузки:', error);
                 loadStatus.textContent = '❌ Ошибка: ' + error.message;
                 generator = null;
             } finally {
@@ -285,13 +169,12 @@
             }
         });
 
-        // Генерация текста
+        // ---------- Генерация текста ----------
         sendBtn.addEventListener('click', async () => {
             if (!generator) {
                 alert('Сначала загрузите модель!');
                 return;
             }
-
             const prompt = inputText.value.trim();
             if (!prompt) {
                 alert('Введите текст (промпт)');
@@ -304,7 +187,6 @@
             outputText.value = '';
 
             const maxNewTokens = 100;
-
             try {
                 const result = await generator(prompt, {
                     max_new_tokens: maxNewTokens,
@@ -318,13 +200,11 @@
                         });
                         outputText.value = decoded;
                         const progressPercent = Math.min(
-                            (tokenIds.length / maxNewTokens) * 100,
-                            100
+                            (tokenIds.length / maxNewTokens) * 100, 100
                         );
                         genProgress.value = progressPercent;
                     }
                 });
-
                 outputText.value = result[0].generated_text;
                 genProgress.value = 100;
                 genStatus.textContent = '✅ Готово';
@@ -336,7 +216,7 @@
             }
         });
 
-        // Отправка по Ctrl+Enter
+        // Ctrl+Enter для отправки
         inputText.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
