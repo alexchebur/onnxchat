@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ruGPT-3 Small ONNX – Чат (рабочая версия)</title>
+    <title>ruGPT-3 Small ONNX – Чат (исправлено)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -54,14 +54,14 @@
         <div class="model-loader">
             <label>📦 Модель:</label>
             <select id="model-select">
-                <option value="model.onnx">model.onnx (501 MB)</option>
-                <option value="model_bnb4.onnx">model_bnb4.onnx (501 MB)</option>
-                <option value="model_fp16.onnx">model_fp16.onnx (251 MB)</option>
-                <option value="model_int8.onnx">model_int8.onnx (280 MB)</option>
-                <option value="model_q4.onnx">model_q4.onnx (501 MB)</option>
-                <option value="model_q4f16.onnx" selected>model_q4f16.onnx (251 MB) ★</option>
-                <option value="model_quantized.onnx">model_quantized.onnx (280 MB)</option>
-                <option value="model_uint8.onnx">model_uint8.onnx (280 MB)</option>
+                <option value="onnx/model.onnx">model.onnx (501 MB)</option>
+                <option value="onnx/model_bnb4.onnx">model_bnb4.onnx (501 MB)</option>
+                <option value="onnx/model_fp16.onnx">model_fp16.onnx (251 MB)</option>
+                <option value="onnx/model_int8.onnx">model_int8.onnx (280 MB)</option>
+                <option value="onnx/model_q4.onnx">model_q4.onnx (501 MB)</option>
+                <option value="onnx/model_q4f16.onnx" selected>model_q4f16.onnx (251 MB) ★</option>
+                <option value="onnx/model_quantized.onnx">model_quantized.onnx (280 MB)</option>
+                <option value="onnx/model_uint8.onnx">model_uint8.onnx (280 MB)</option>
             </select>
             <button id="load-btn">⚡ Загрузить</button>
         </div>
@@ -101,30 +101,47 @@
         let generator = null;
         let isLoading = false;
 
-        // Конфигурация модели – точные параметры ruGPT-3 Small (GPT-2)
+        // ПОЛНАЯ конфигурация из вашего config.json
         const modelConfig = {
-            model_type: 'gpt2',
-            architectures: ['GPT2LMHeadModel'],
-            vocab_size: 50257,
-            n_positions: 2048,
-            n_embd: 768,
-            n_layer: 12,
-            n_head: 12,
-            activation_function: 'gelu_new',
-            resid_pdrop: 0.1,
-            embd_pdrop: 0.1,
-            attn_pdrop: 0.1,
-            layer_norm_epsilon: 1e-5,
-            initializer_range: 0.02,
-            bos_token_id: 1,
-            eos_token_id: 2,
-            pad_token_id: 0,
-            use_cache: true
+            "_attn_implementation_autoset": true,
+            "_name_or_path": "ai-forever/rugpt3small_based_on_gpt2",
+            "activation_function": "gelu_new",
+            "architectures": ["GPT2LMHeadModel"],
+            "attn_pdrop": 0.1,
+            "bos_token_id": 1,
+            "embd_pdrop": 0.1,
+            "eos_token_id": 2,
+            "gradient_checkpointing": false,
+            "id2label": { "0": "LABEL_0" },
+            "initializer_range": 0.02,
+            "label2id": { "LABEL_0": 0 },
+            "layer_norm_epsilon": 1e-05,
+            "model_type": "gpt2",
+            "n_ctx": 2048,
+            "n_embd": 768,
+            "n_head": 12,
+            "n_inner": null,
+            "n_layer": 12,
+            "n_positions": 2048,
+            "pad_token_id": 0,
+            "reorder_and_upcast_attn": false,
+            "resid_pdrop": 0.1,
+            "scale_attn_by_inverse_layer_idx": false,
+            "scale_attn_weights": true,
+            "summary_activation": null,
+            "summary_first_dropout": 0.1,
+            "summary_proj_to_labels": true,
+            "summary_type": "cls_index",
+            "summary_use_proj": true,
+            "torch_dtype": "float32",
+            "transformers_version": "4.49.0",
+            "use_cache": true,
+            "vocab_size": 50264
         };
 
         loadBtn.addEventListener('click', async () => {
             if (isLoading) return;
-            const modelFileName = modelSelect.value;
+            const modelFileName = modelSelect.value; // уже содержит "onnx/..."
             isLoading = true;
             loadBtn.disabled = true;
             sendBtn.disabled = true;
@@ -143,10 +160,9 @@
                     'text-generation',
                     'onnx-community/rugpt3small_based_on_gpt2-ONNX',
                     {
-                        model_file_name: modelFileName,
-                        subfolder: 'onnx',   // модель в папке onnx/
-                        config: modelConfig, // ← ЯВНАЯ конфигурация (решает проблему model type: null)
-                        // токенизатор подхватится автоматически из корня репозитория
+                        model_file_name: modelFileName, // "onnx/model_q4f16.onnx"
+                        // subfolder НЕ используем, чтобы config и tokenizer брались из корня
+                        config: modelConfig, // явная конфигурация
                         progress_callback: (progress) => {
                             if (progress.status === 'progress') {
                                 const percent = Math.floor((progress.loaded / progress.total) * 100);
