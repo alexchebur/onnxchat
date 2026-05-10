@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ruGPT-3 Small ONNX – Чат (Transformers.js)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ruGPT-3 Small ONNX – Чат (рабочая версия)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -15,81 +15,70 @@
         .container {
             width: 100%; max-width: 800px;
             background: #2a2a3c; border-radius: 16px;
-            padding: 30px 25px; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            padding: 25px 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
         }
-        h1 { font-size: 1.8rem; margin-bottom: 20px; text-align: center; color: #ffb86c; }
-        .model-loader { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center; }
+        h1 { font-size: 1.6rem; margin-bottom: 20px; text-align: center; color: #ffb86c; }
+        .model-loader { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; align-items: center; }
         label { font-weight: 600; color: #c0c0d0; }
         select, button {
-            padding: 10px 16px; border-radius: 8px; border: 1px solid #444;
+            padding: 10px 14px; border-radius: 8px; border: 1px solid #444;
             background: #1e1e2f; color: #e0e0e0; font-size: 0.95rem;
-            cursor: pointer; transition: background 0.2s, border-color 0.2s;
+            cursor: pointer; transition: background 0.2s;
         }
-        select { max-width: 220px; }
         button { background: #4a4a7a; border-color: #5a5a8a; font-weight: 600; }
-        button:hover:not(:disabled) { background: #5a5a9a; border-color: #7a7aca; }
+        button:hover:not(:disabled) { background: #5a5a9a; }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .progress-container, .gen-progress-container { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-        progress { flex: 1; height: 14px; border-radius: 10px; overflow: hidden; }
-        progress::-webkit-progress-bar { background-color: #3a3a4a; border-radius: 10px; }
+        progress { flex: 1; height: 12px; border-radius: 10px; }
+        progress::-webkit-progress-bar { background: #3a3a4a; border-radius: 10px; }
         progress::-webkit-progress-value { background: linear-gradient(90deg, #ffb86c, #ff79c6); border-radius: 10px; }
-        progress::-moz-progress-bar { background: linear-gradient(90deg, #ffb86c, #ff79c6); border-radius: 10px; }
-        .status-text { font-size: 0.9rem; color: #b0b0c0; min-width: 120px; }
+        .status-text { font-size: 0.9rem; color: #b0b0c0; min-width: 130px; }
 
-        .chat { display: flex; flex-direction: column; gap: 15px; }
+        .chat { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
         textarea {
-            width: 100%; padding: 14px; border-radius: 12px;
+            width: 100%; padding: 12px; border-radius: 12px;
             border: 1px solid #444; background: #1e1e2f;
             color: #f0f0f0; font-size: 1rem; resize: vertical;
-            font-family: inherit; transition: border-color 0.2s;
+            font-family: inherit;
         }
         textarea:focus { outline: none; border-color: #ffb86c; }
         #input-text { min-height: 80px; }
-        #output-text { min-height: 160px; background: #232336; cursor: default; }
-        .btn-send { align-self: flex-start; padding: 12px 28px; font-size: 1rem; }
-        .info-note { font-size: 0.8rem; color: #9090a0; margin-top: 15px; text-align: center; }
-
-        @media (max-width: 500px) {
-            .model-loader { flex-direction: column; align-items: stretch; }
-            select { max-width: 100%; }
-        }
+        #output-text { min-height: 150px; background: #232336; cursor: default; }
+        .btn-send { align-self: flex-start; padding: 12px 28px; }
+        .info-note { font-size: 0.75rem; color: #9090a0; margin-top: 12px; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🧠 ruGPT-3 Small (ONNX) – чат в браузере</h1>
-
+        <h1>🧠 ruGPT-3 Small (ONNX) – чат</h1>
         <div class="model-loader">
-            <label for="model-select">📦 Модель:</label>
+            <label>📦 Модель:</label>
             <select id="model-select">
                 <option value="model.onnx">model.onnx (501 MB)</option>
                 <option value="model_bnb4.onnx">model_bnb4.onnx (501 MB)</option>
-                <option value="model_fp16.onnx" selected>model_fp16.onnx (251 MB)</option>
+                <option value="model_fp16.onnx">model_fp16.onnx (251 MB)</option>
                 <option value="model_int8.onnx">model_int8.onnx (280 MB)</option>
                 <option value="model_q4.onnx">model_q4.onnx (501 MB)</option>
-                <option value="model_q4f16.onnx">model_q4f16.onnx (251 MB)</option>
+                <option value="model_q4f16.onnx" selected>model_q4f16.onnx (251 MB) ★</option>
                 <option value="model_quantized.onnx">model_quantized.onnx (280 MB)</option>
                 <option value="model_uint8.onnx">model_uint8.onnx (280 MB)</option>
             </select>
-            <button id="load-btn">⚡ Загрузить модель</button>
+            <button id="load-btn">⚡ Загрузить</button>
         </div>
 
-        <div class="progress-container">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
             <progress id="load-progress" value="0" max="100"></progress>
             <span id="load-status" class="status-text">Модель не загружена</span>
         </div>
 
         <div class="chat">
-            <textarea id="input-text" placeholder="Введите промпт для генерации..."></textarea>
+            <textarea id="input-text" placeholder="Введите промпт..."></textarea>
             <button id="send-btn" class="btn-send" disabled>📤 Отправить</button>
-
-            <div class="gen-progress-container">
+            <div style="display:flex; align-items:center; gap:10px;">
                 <progress id="gen-progress" value="0" max="100"></progress>
                 <span id="gen-status" class="status-text"></span>
             </div>
-
-            <textarea id="output-text" readonly placeholder="Здесь появится ответ..."></textarea>
+            <textarea id="output-text" readonly placeholder="Ответ..."></textarea>
         </div>
         <div class="info-note">
             Все вычисления на клиенте. Модель загружается в память браузера.
@@ -99,7 +88,6 @@
     <script type="module">
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
 
-        // ---------- DOM элементы ----------
         const loadBtn = document.getElementById('load-btn');
         const modelSelect = document.getElementById('model-select');
         const loadProgress = document.getElementById('load-progress');
@@ -113,55 +101,71 @@
         let generator = null;
         let isLoading = false;
 
-        // ---------- Загрузка модели ----------
+        // Конфигурация модели – точные параметры ruGPT-3 Small (GPT-2)
+        const modelConfig = {
+            model_type: 'gpt2',
+            architectures: ['GPT2LMHeadModel'],
+            vocab_size: 50257,
+            n_positions: 2048,
+            n_embd: 768,
+            n_layer: 12,
+            n_head: 12,
+            activation_function: 'gelu_new',
+            resid_pdrop: 0.1,
+            embd_pdrop: 0.1,
+            attn_pdrop: 0.1,
+            layer_norm_epsilon: 1e-5,
+            initializer_range: 0.02,
+            bos_token_id: 1,
+            eos_token_id: 2,
+            pad_token_id: 0,
+            use_cache: true
+        };
+
         loadBtn.addEventListener('click', async () => {
             if (isLoading) return;
-
             const modelFileName = modelSelect.value;
             isLoading = true;
             loadBtn.disabled = true;
             sendBtn.disabled = true;
-            loadStatus.textContent = 'Загрузка...';
+            loadStatus.textContent = 'Загрузка файлов...';
             loadProgress.value = 0;
             outputText.value = '';
             genProgress.value = 0;
             genStatus.textContent = '';
 
+            if (generator) {
+                generator = null; // очистка предыдущей сессии
+            }
+
             try {
-                // ВАЖНО: явно разделяем источники:
-                // - config и tokenizer берём из КОРНЯ репозитория
-                // - модель (onnx) берём из подпапки onnx/
                 generator = await pipeline(
                     'text-generation',
-                    'onnx-community/rugpt3small_based_on_gpt2-ONNX', // базовый путь
+                    'onnx-community/rugpt3small_based_on_gpt2-ONNX',
                     {
                         model_file_name: modelFileName,
-                        subfolder: 'onnx',                // только для файла модели
-                        // Конфигурацию и токенизатор ищем в корне (без subfolder)
-                        config: 'onnx-community/rugpt3small_based_on_gpt2-ONNX',
-                        tokenizer: 'onnx-community/rugpt3small_based_on_gpt2-ONNX',
+                        subfolder: 'onnx',   // модель в папке onnx/
+                        config: modelConfig, // ← ЯВНАЯ конфигурация (решает проблему model type: null)
+                        // токенизатор подхватится автоматически из корня репозитория
                         progress_callback: (progress) => {
-                            console.log('Progress:', progress); // для отладки
                             if (progress.status === 'progress') {
-                                const percent = (progress.loaded / progress.total) * 100;
+                                const percent = Math.floor((progress.loaded / progress.total) * 100);
                                 loadProgress.value = percent;
-                                loadStatus.textContent =
-                                    `Загрузка: ${progress.file ?? ''} (${Math.round(percent)}%)`;
+                                loadStatus.textContent = `Файл: ${progress.file ?? ''} (${percent}%)`;
                             } else if (progress.status === 'done') {
                                 loadProgress.value = 100;
-                                loadStatus.textContent = 'Файлы получены, инициализация...';
+                                loadStatus.textContent = 'Инициализация ONNX-сессии… (может занять минуту)';
                             } else if (progress.status === 'ready') {
                                 loadProgress.value = 100;
-                                loadStatus.textContent = 'Модель готова';
+                                loadStatus.textContent = 'Модель готова ✅';
                             }
                         }
                     }
                 );
-                loadStatus.textContent = '✅ Модель загружена и готова';
+                loadStatus.textContent = '✅ Модель загружена';
                 sendBtn.disabled = false;
             } catch (error) {
-                console.error('Ошибка загрузки:', error);
-                loadStatus.textContent = '❌ Ошибка: ' + error.message;
+                loadStatus.textContent = '❌ ' + error.message;
                 generator = null;
             } finally {
                 isLoading = false;
@@ -169,21 +173,20 @@
             }
         });
 
-        // ---------- Генерация текста ----------
         sendBtn.addEventListener('click', async () => {
             if (!generator) {
-                alert('Сначала загрузите модель!');
+                alert('Сначала загрузите модель');
                 return;
             }
             const prompt = inputText.value.trim();
             if (!prompt) {
-                alert('Введите текст (промпт)');
+                alert('Введите текст');
                 return;
             }
 
             sendBtn.disabled = true;
             genProgress.value = 0;
-            genStatus.textContent = 'Генерация...';
+            genStatus.textContent = 'Генерация…';
             outputText.value = '';
 
             const maxNewTokens = 100;
@@ -199,24 +202,19 @@
                             skip_special_tokens: true
                         });
                         outputText.value = decoded;
-                        const progressPercent = Math.min(
-                            (tokenIds.length / maxNewTokens) * 100, 100
-                        );
-                        genProgress.value = progressPercent;
+                        genProgress.value = Math.min((tokenIds.length / maxNewTokens) * 100, 100);
                     }
                 });
                 outputText.value = result[0].generated_text;
                 genProgress.value = 100;
                 genStatus.textContent = '✅ Готово';
             } catch (error) {
-                console.error('Ошибка генерации:', error);
-                genStatus.textContent = '❌ Ошибка генерации';
+                genStatus.textContent = '❌ ' + error.message;
             } finally {
                 sendBtn.disabled = false;
             }
         });
 
-        // Ctrl+Enter для отправки
         inputText.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
